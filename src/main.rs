@@ -1,21 +1,21 @@
 #![allow(dead_code)]
 
-use std::{collections::HashMap};
+use core::panic;
+use std::{collections::HashMap, fs::File, io::ErrorKind};
 
 use helpers::calcs::is_odd;
 
-use crate::helpers::calcs::{get_avg, get_biggest_in_hash};
+
+use crate::{errors::errors::{read_file, read_username}, helpers::calcs::{get_avg, get_biggest_in_hash}};
 
 mod helpers;
+mod errors;
 
 fn main() {
-
 
     let list_int = [3, 5, 2, 7, 3];
 
     let list_words  = ["hola".to_string(), "como".to_string(), "apple".to_string(), "first".to_string()];
-
-
 
     let median_result = median(&list_int);
 
@@ -28,7 +28,13 @@ fn main() {
     println!("mode is: {}", mode_result);
     println!("pig latin is: {:?}", pig_latinized_words);
 
-    
+
+    let res = read_username().unwrap_or_else(|err| panic!("eeeeerrorr {:?}", err));
+
+    println!("{}", res);
+
+
+
 
 }
 

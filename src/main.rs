@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use std::{collections::HashMap, i32, pin::pin};
+use std::{collections::HashMap};
 
 use helpers::calcs::is_odd;
 
@@ -10,7 +10,10 @@ mod helpers;
 
 fn main() {
 
+
     let list_int = [3, 5, 2, 7, 3];
+
+    let list_words  = ["hola".to_string(), "como".to_string(), "apple".to_string(), "first".to_string()];
 
 
 
@@ -18,10 +21,14 @@ fn main() {
 
     let mode_result = get_mode(&list_int); 
 
+    let pig_latinized_words = convert_to_pig_latin(&list_words);
+
 
     println!("median is: {}", median_result);
     println!("mode is: {}", mode_result);
+    println!("pig latin is: {:?}", pig_latinized_words);
 
+    
 
 }
 
@@ -78,6 +85,41 @@ fn get_mode(list_integer: &[i32]) -> i32 {
 
 
     get_biggest_in_hash(&values).1
+}
+
+
+//if first letter is consonant
+//move consonant to the end and
+//add ay example
+//first -> irst-fay
+fn convert_to_pig_latin(words: &[String]) -> Vec<String> {
+
+    let mut coll_words: Vec<String> = words.to_vec();
+
+    let vocals : Vec<char>  = vec!['a', 'e', 'i', 'o', 'u'];
+
+    for word in coll_words.iter_mut() {
+
+        let first_letter = &word.chars().next().unwrap();
+        if !vocals.contains(&word.chars().next().unwrap()) {
+
+            word.push('-');
+            word.push(*first_letter);
+            word.push('a');
+            word.push('y');
+
+            word.remove(0);
+        } else {
+
+            word.push('-');
+            word.push('h');
+            word.push('a');
+            word.push('y');
+        }
+    }
+
+    coll_words
+
 }
 
 

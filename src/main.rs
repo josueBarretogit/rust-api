@@ -1,62 +1,99 @@
 use core::panic;
-use actix_web::{body::BoxBody, get, http::header::ContentType, web, App, HttpResponse, HttpServer, Responder};
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres, Row};
+use actix_web::{get, middleware, web, App, HttpResponse, HttpServer, Responder};
+use sqlx::{postgres::PgPoolOptions,  Pool, Postgres, Row};
 use serde::{Serialize, Deserialize};
 use dotenv::dotenv;
 
 
 
-#[derive(Debug, Serialize, Deserialize)]
+
+#[derive(Debug, Serialize, Deserialize, sqlx::Type)]
 struct Books {
-    title : String
+    id : i64,
+    title : String,
+    review_id : Vec<i64>
 }
 
 
-impl Responder for Books {
-    type Body = BoxBody;
-
-    fn respond_to(self, _req: &actix_web::HttpRequest) -> HttpResponse<Self::Body> {
-        let body = serde_json::to_string(&self).unwrap();
-
-        // Create response and set content type
-        HttpResponse::Ok()
-            .content_type(ContentType::json())
-            .body(body)
-    }
+#[derive(Debug, Serialize, Deserialize)]
+struct BooksDTO {
+    id : i64,
+    title : String,
+    reviews : Vec<Reviews>
 }
 
 
-struct  AppState {
-    db : Pool<Postgres>
+#[derive(Debug, Serialize, Deserialize)]
+struct Reviews {
+    id : i64,
+    title : String,
+}
+
+struct  AppState<T : sqlx::Database> {
+    db : Pool<T>
 }
 
 
 #[get("/data")]
-async fn get_books(app_data : web::Data<AppState>) -> impl Responder {
+async fn get_books(app_data : web::Data<AppState<Postgres>>) -> impl Responder {
     let db = &app_data.db;
 
-    let res  = sqlx::query("SELECT title from  books where id = 1").fetch_one(db).await.unwrap();
+    let response  = sqlx::query("SELECT books.id as id,books.title title, ARRAY_AGG(reviews.id) as review_id from  books INNER JOIN reviews ON reviews.book_id = books.id GROUP BY books.id").fetch_all(db).await;
 
-    let book = Books {
-        title : res.get("title")
-    };
+    match  response {
+        Ok(data) => {
 
-    book
+            let books : Vec<BooksDTO> = data.iter().map(|row| {
+                let row_book = Books {
+                    id : row.get("id"),
+                    title : row.get("title"),
+                    review_id : row.get("review_id")
+                };
+                let mut book :BooksDTO = BooksDTO { id: 0, title: "".to_string(), reviews: vec![
+                    Reviews {
+                    id : 0,
+                    title : "".to_string()
+                    }
+                ] };
+
+                book.id = row_book.id;
+                book.title = row_book.title;
+
+                for id in row_book.review_id {
+                    book.reviews.push(Reviews {
+                        id,
+                        title : String::from("aaa")
+                    });
+                }
+
+                book
+                
+            }).collect();
+
+
+            HttpResponse::Ok()
+                .json(web::Json(books))
+        },
+        Err(e) => return HttpResponse::InternalServerError().json(web::Json(e.to_string()))
+    }
 }
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error>  {
 
     dotenv().ok();
+
     let db_uri = std::env::var("DB_URI").unwrap_or_else(|err| panic!("must have a db uri {err}"));
 
 
     let pg_pool = PgPoolOptions::new().connect(&db_uri).await.unwrap_or_else(|err| panic!("couldnot connect: {err}"));
 
 
+
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(AppState {db : pg_pool.clone()}))
+            .wrap(middleware::Compress::default())
             .service(get_books)
 
     })

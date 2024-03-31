@@ -4,12 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-actix-web = "4.0"
-config = "0.13"
-deadpool-postgres = { version = "0.12", features = ["serde"] }
-derive_more = "0.99"
-dotenvy = "0.15"
-serde = { version = "1.0.137", features = ["derive"] }
-tokio-postgres = "0.7.6"
-tokio-pg-mapper = "0.2.0"
-tokio-pg-mapper-derive = "0.2.0"
+clap = { version = "4.5.4", features = ["derive"] }
+clap_complete = "4.5.1"

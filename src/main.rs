@@ -1,7 +1,6 @@
 use axum::{routing::{get, post}, Router};
 use controllers::{book_controller, Controller};
-
-
+use routes::{book_routes, route::CommonRoutes};
 
 mod routes;
 mod  models;
@@ -11,11 +10,10 @@ mod controllers;
 #[tokio::main]
 async fn main() {
 
+    let book_routes = book_routes::BookRoutes::new();
 
     let app : Router<()> = Router::new()
-        .route("/create", post(book_controller::BookController::create_model))
-        .route("/get/:id", get(book_controller::BookController::get_by_id))
-        .route("/get-books", get(book_controller::BookController::get_models));
+        .merge(book_routes.set_routes());
 
     
 

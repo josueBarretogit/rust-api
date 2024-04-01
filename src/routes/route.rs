@@ -1,11 +1,21 @@
-use axum::Json;
+use axum::{ routing::get, Json, Router};
+use serde::Serialize;
+
+use crate::controllers::{ Controller};
 
 
-use crate::models::book_models::{self, Books};
-
-pub async fn get_books() -> Json<Books> {
-
-    let book = book_models::Books::new("a description".to_string());
-
-    Json(book)
+pub trait CommonRoutes {
+    fn set_routes(&self) -> Router;
 }
+
+pub struct RouterModel {
+    pub model : String,
+    router : Router,
+}
+
+
+    
+
+
+
+

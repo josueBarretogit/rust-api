@@ -3,17 +3,16 @@ use serde::Serialize;
 
 pub mod book_controller;
 
-pub trait Controller<T> 
+pub trait Controller<T>
 where
-    T : Serialize 
+    T : Serialize
 {
 
-    async fn get_models() -> impl IntoResponse;
+    async fn handle_get_models() -> impl IntoResponse;
 
-    async fn create_model(body : axum::extract::Json<T> ) -> impl IntoResponse;
 
-    async fn get_by_id(id : axum::extract::Path<u32> ) -> impl IntoResponse;
-    
+    async fn handle_create_model(body : axum::extract::Json<T> ) -> impl IntoResponse;
+
 }
 
 

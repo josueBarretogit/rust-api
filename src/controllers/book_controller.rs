@@ -1,7 +1,7 @@
 use axum::{ extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde_json::{json, Value};
 
-use crate::{models::book_models::Books, repositories::Repository, AppStateBooks};
+use crate::{models::book_models::Books, repositories::Repository, AppStateBooks, BookRepository2, BooksRepository};
 
 
 
@@ -9,9 +9,9 @@ pub struct BookController {}
 
 
 
-impl super::Controller<Books, AppStateBooks> for BookController {
+impl super::Controller<Books, AppStateBooks<BooksRepository>> for BookController {
 
-    async fn handle_get_models(state: State<AppStateBooks>) -> Result<Json<Vec<Books>>, (StatusCode, Json<Value>)> {
+    async fn handle_get_models(state: State<AppStateBooks<BooksRepository>>) -> Result<Json<Vec<Books>>, (StatusCode, Json<Value>)> {
 
         let repository = &state.repository;
 
@@ -33,9 +33,4 @@ impl super::Controller<Books, AppStateBooks> for BookController {
 
 }
 
-impl BookController {
-    pub fn new() -> Self {
-        BookController{}
 
-    }
-}

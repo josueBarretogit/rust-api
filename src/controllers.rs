@@ -4,14 +4,13 @@ use axum::{async_trait, body::Body, extract::{self, FromRequest, Request, State}
 use future_utils::BoxFuture;
 use serde::Serialize;
 use serde_json::Value;
-use tower::Service;
-
 
 
 
 pub mod book_controller;
 pub mod customer_controller;
 
+/// T: model, K: appstate
 pub trait Controller<T, K>
 where
     T : Serialize,

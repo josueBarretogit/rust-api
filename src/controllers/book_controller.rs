@@ -1,10 +1,8 @@
-use axum::{  async_trait, extract::{Path, State}, http::StatusCode, response::IntoResponse, routing::get, Json};
-use serde::de::Error;
+use axum::{ extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde_json::{json, Value};
 
-use crate::{models::book_models::Books, repositories::Repository, routes::book_routes::AppStateBooks};
+use crate::{models::book_models::Books, repositories::Repository, AppStateBooks};
 
-use super::Controller;
 
 
 pub struct BookController {}
@@ -24,7 +22,7 @@ impl super::Controller<Books, AppStateBooks> for BookController {
         }
 
     }
-    
+
     async fn handle_create_model( Json(body): Json<Books>) -> impl IntoResponse {
 
         let book = Books::new(body.description);
@@ -32,6 +30,12 @@ impl super::Controller<Books, AppStateBooks> for BookController {
         Json(json!({"book:" : book}))
     }
 
+
 }
 
+impl BookController {
+    pub fn new() -> Self {
+        BookController{}
 
+    }
+}

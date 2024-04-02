@@ -14,15 +14,14 @@ pub struct AppStateBooks {
 
 impl CommonRoutes for BookRoutes {
     fn set_routes(&self)  -> Router {
+
         let state = AppStateBooks {
             repository : book_repository::BooksRepository::new()
         };
 
         let router = Router::new() 
             .route("/books", get(book_controller::BookController::handle_get_models).post(book_controller::BookController::handle_create_model))
-            .with_state(state)
-
-        ;
+            .with_state(state);
 
         router
     }

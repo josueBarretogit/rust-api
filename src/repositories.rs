@@ -1,11 +1,15 @@
-use axum::Json;
+use std::error::Error;
+
+use axum::BoxError;
+
 
 pub mod book_repository;
+pub mod customer_repository;
 
 
 pub trait Repository<T>  {
 
-    fn find_all(&self) -> i32;
+    async fn find_all(&self) -> Result<Vec<T>, BoxError>;
     
 }
 

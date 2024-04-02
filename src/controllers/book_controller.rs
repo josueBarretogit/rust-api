@@ -1,21 +1,20 @@
-
-use axum::{  extract::Path, response::IntoResponse, routing::get, Json};
+use axum::{  async_trait, extract::{Path, State}, response::IntoResponse, routing::get, Json};
 use serde_json::{json, Value};
 
-use crate::models::book_models::Books;
+use crate::{models::book_models::Books, repositories::Repository, routes::book_routes::AppStateBooks};
 
 
-#[derive(Clone)]
-pub struct BookController {}
-
-
-
-impl super::Controller<Books> for BookController {
+pub struct BookController<'a> {
+    repository : &'a dyn Repository<Books>
+}
 
 
 
-    async fn handle_get_models() -> Json<Books> {
+impl super::Controller<Books> for BookController<'_> {
+
+    async fn handle_get_models(state: State<AppStateBooks>) -> Json<Books> {
         let book = Books::new("a new book aaaaa".to_string());
+        println!("{}", state.0.repository.find_all());
 
         Json(book)
     }
@@ -28,16 +27,15 @@ impl super::Controller<Books> for BookController {
         Json(json!({"book:" : book}))
     }
 
-
-
 }
 
 
-impl BookController {
+impl BookController<'_> {
 
-    pub fn new() -> Self {
-        BookController {  }
+    pub fn new(repository : &dyn Repository<Books>) -> BookController<'_>{
+        BookController { repository }
     }
+    
 }
 
 

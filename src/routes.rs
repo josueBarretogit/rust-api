@@ -22,28 +22,8 @@ pub struct AppStateBooks<T : Repository<Books>>{
 }
 
 
-
-
 #[derive(Clone)]
 pub struct AppStateCustomer {
     pub repository : CustomerRepository
 }
-
-
-#[derive(Clone)]
-pub struct BookRepository2 {}
-
-impl Repository<Books> for BookRepository2 {
-    async fn find_all(&self) -> Result<Vec<Books>, axum::BoxError> {
-        Ok(vec![Books::new("adkjalksdjakls".to_string()), Books::new("desde otra dependency".to_string())]) 
-    }
-}
-
-impl BookRepository2 {
-    pub fn new() -> Self {
-        BookRepository2 {}
-    }
-    
-}
-
 

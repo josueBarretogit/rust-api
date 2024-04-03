@@ -7,6 +7,8 @@ use controllers::customer_controller::CustomerController;
 use controllers::Controller;
 use crate::repositories::book_repository::*;
 use crate::routes::*;
+use crate::repositories::customer_repository::CustomerRepository;
+use sqlx::postgres::PgPoolOptions;
 mod routes;
 mod  models;
 mod controllers;
@@ -17,9 +19,8 @@ mod repositories;
 
 #[macro_export]
 macro_rules! set_routes {
-    ($controller:ty, $state:expr, $name:expr) => {
-        Router::new().route($name, get(<$controller>::handle_get_models).post(<$controller>::handle_create_model))
-            .with_state($state)
+    ($controller:ty) => {
+        Router::new().route("/", get(<$controller>::handle_get_models).post(<$controller>::handle_create_model))
     };
 }
 
@@ -28,24 +29,35 @@ macro_rules! set_routes {
 async fn main() {
 
 
+    let  db = PgPoolOptions::new()
+        .max_connections(50)
+        .connect("postgres://postgres.uvjtpqdjfbjlpgqmhvrn:NLyrdoKtJXMfYJIh@aws-0-us-west-1.pooler.supabase.com:5432/postgres")
+        .await
+        .expect("could not connect to db");
+
     let book_state = AppStateBooks {
-        repository : BooksRepository::new()
+        repository : BooksRepository::new(db.clone())
     };
+
+
 
 
     let customer_state = AppStateCustomer {
-        repository : crate::repositories::customer_repository::CustomerRepository::new()
+        repository : CustomerRepository::new(db.clone())
     };
 
 
-    let books  = set_routes!(BookController, book_state, "/books");
-    let customer_routes = set_routes!(CustomerController, customer_state, "/customers");
+    let books  = set_routes!(BookController);
 
 
+
+    let customer_routes = set_routes!(CustomerController);
+
+    let updated = books.clone().route("/aa", get(|| async { "aaa"}));
 
     let app  = Router::new()
-        .merge(books)
-        .merge(customer_routes)
+        .nest("/books",updated).with_state(book_state)
+        .nest("/customers",customer_routes).with_state(customer_state)
         .layer(
 
             CorsLayer::new()

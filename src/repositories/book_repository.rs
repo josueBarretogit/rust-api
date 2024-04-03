@@ -1,4 +1,5 @@
 use axum::BoxError;
+use sqlx::{postgres::PgPoolOptions, PgPool, Pool, Postgres};
 
 use crate::models::book_models::Books;
 
@@ -6,20 +7,26 @@ use super::Repository;
 
 
 #[derive(Clone)]
-pub struct BooksRepository {}
+pub struct BooksRepository {
+    pub db :  PgPool
+}
 
 
 impl Repository<Books> for BooksRepository {
     async fn find_all(&self) -> Result<Vec<Books>, BoxError> {
-        Ok(vec![Books::new("un nuevo book".to_string()), Books::new("otro nuevo book".to_string())]) 
+
+        let  db_response = sqlx::query_as::<_, Books>("SELECT * from books").fetch_all(&self.db).await.unwrap();
+
+
+        Ok(db_response) 
     } 
     
 }
 
 impl BooksRepository {
 
-    pub fn new() -> Self {
-        BooksRepository {  }
+    pub fn new(pool :  PgPool) -> Self {
+        BooksRepository { db :  pool }
     }
     
 }

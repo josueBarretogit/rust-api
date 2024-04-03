@@ -1,12 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct Books {
-    pub description : String 
+    pub description : String,
+    pub title : String 
 }
 
 impl Books {
-    pub fn new(description: String) -> Self {
-        Books {description }
+    pub fn new(description: String, title : String) -> Self {
+        Books {description, title }
     }
 }

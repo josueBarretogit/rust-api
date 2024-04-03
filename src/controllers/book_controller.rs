@@ -19,7 +19,7 @@ impl super::Controller<Books, AppStateBooks<BooksRepository>> for BookController
 
         match response {
             Ok(books) => Ok(Json(books)),
-            Err(_e) => Err((StatusCode::BAD_REQUEST, Json(json!({"response" : "bad request"}))))
+            Err(e) => Err((StatusCode::BAD_REQUEST, Json(json!({"response" : "bad request", "details" : e.to_string()}))))
         }
 
     }

@@ -15,7 +15,7 @@ pub struct BooksRepository {
 impl Repository<Books> for BooksRepository {
     async fn find_all(&self) -> Result<Vec<Books>, BoxError> {
 
-        let  db_response = sqlx::query_as::<_, Books>("SELECT * from books").fetch_all(&self.db).await.unwrap();
+        let db_response = sqlx::query_as!(Books,"SELECT description as description, title as title from books").fetch_all(&self.db).await?;
 
 
         Ok(db_response) 

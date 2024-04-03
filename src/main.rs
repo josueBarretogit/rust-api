@@ -1,3 +1,6 @@
+use core::panic;
+use std::process;
+
 use axum::http::{HeaderValue, Method};
 use axum::routing::get;
 use axum::Router;
@@ -26,7 +29,12 @@ macro_rules! set_routes {
 
 
 #[tokio::main] 
-async fn main() {
+async fn main()   {
+
+    dotenvy::dotenv().unwrap_or_else(|err| {
+        eprint!("details: {err}");
+        process::exit(1)
+    });
 
 
     let  db = PgPoolOptions::new()

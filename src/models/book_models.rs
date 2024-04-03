@@ -2,12 +2,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct Books {
-    pub description : String,
-    pub title : String 
+    pub description : Option<String>,
+    pub title : Option<String> 
 }
 
 impl Books {
-    pub fn new(description: String, title : String) -> Self {
+    pub fn new(description: Option<String>, title : Option<String>) -> Self {
         Books {description, title }
     }
 }

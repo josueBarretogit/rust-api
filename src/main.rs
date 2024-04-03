@@ -1,9 +1,9 @@
-use core::panic;
 use std::process;
-
+use axum::handler::Handler;
 use axum::http::{HeaderValue, Method};
 use axum::routing::get;
-use axum::Router;
+use axum::{middleware, Extension, Router};
+use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
 use controllers::book_controller::BookController;
 use controllers::customer_controller::CustomerController;
@@ -12,12 +12,15 @@ use crate::repositories::book_repository::*;
 use crate::routes::*;
 use crate::repositories::customer_repository::CustomerRepository;
 use sqlx::postgres::PgPoolOptions;
+use  crate::middle::*;
+
+
 mod routes;
 mod  models;
 mod controllers;
 mod repositories;
-
-
+mod middle;
+mod services;
 
 
 #[macro_export]
@@ -36,10 +39,11 @@ async fn main()   {
         process::exit(1)
     });
 
+    let db_uri = dotenvy::var("DB_URI").expect("must have a db uri env");
 
     let  db = PgPoolOptions::new()
         .max_connections(50)
-        .connect("postgres://postgres.uvjtpqdjfbjlpgqmhvrn:NLyrdoKtJXMfYJIh@aws-0-us-west-1.pooler.supabase.com:5432/postgres")
+        .connect(&db_uri)
         .await
         .expect("could not connect to db");
 
@@ -48,24 +52,16 @@ async fn main()   {
     };
 
 
-
-
     let customer_state = AppStateCustomer {
         repository : CustomerRepository::new(db.clone())
     };
 
 
-    let books  = set_routes!(BookController);
 
 
-
-    let customer_routes = set_routes!(CustomerController);
-
-    let updated = books.clone().route("/aa", get(|| async { "aaa"}));
-
+    
     let app  = Router::new()
-        .nest("/books",updated).with_state(book_state)
-        .nest("/customers",customer_routes).with_state(customer_state)
+        .route("/books", get(BookController::tes).layer(middleware::from_fn(my_middle)))
         .layer(
 
             CorsLayer::new()
@@ -73,8 +69,6 @@ async fn main()   {
                 .allow_methods([Method::GET, Method::POST, Method::PUT])
         )
     ;
-
-
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
 

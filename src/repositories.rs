@@ -1,6 +1,4 @@
-use std::error::Error;
-
-use axum::{async_trait, BoxError};
+use axum::BoxError;
 
 
 pub mod book_repository;

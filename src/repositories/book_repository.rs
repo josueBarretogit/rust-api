@@ -6,7 +6,7 @@ use crate::models::book_models::Books;
 use super::Repository;
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BooksRepository {
     pub db :  PgPool
 }

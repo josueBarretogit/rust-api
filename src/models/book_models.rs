@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
 pub struct Books {
     pub description : Option<String>,
     pub title : Option<String> 
@@ -11,3 +11,4 @@ impl Books {
         Books {description, title }
     }
 }
+

@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use axum::{http::StatusCode,  Json};
 use serde_json::{json, Value};
 
 use crate::{models::customer_model::Customer, repositories::Repository, AppStateCustomer};
@@ -13,7 +13,7 @@ pub struct CustomerController {}
 
 impl Controller<Customer, AppStateCustomer> for CustomerController {
 
-    async fn handle_get_models(state: axum::extract::State<AppStateCustomer>) -> Result<Json<Vec<Customer>>, (StatusCode, Json<Value>)> {
+    async fn handle_get_models(state: axum::extract::Extension<AppStateCustomer>) -> Result<Json<Vec<Customer>>, (StatusCode, Json<Value>)> {
         let response = state.repository.find_all().await;
         match response {
             Ok(customers) => Ok(Json(customers)),

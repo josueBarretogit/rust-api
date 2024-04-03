@@ -14,9 +14,7 @@ pub trait CommonRoutes {
 }
 
 
-
-
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AppStateBooks<T : Repository<Books>>{
     pub repository :  T
 }

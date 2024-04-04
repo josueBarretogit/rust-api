@@ -6,11 +6,14 @@ use axum::http::{HeaderName, HeaderValue, Method};
 use axum::routing::get;
 use axum::{middleware, Extension, Router};
 use tower::ServiceBuilder;
+use tower_http::catch_panic::CatchPanicLayer;
+use tower_http::compression::CompressionLayer;
 use tower_http::cors::CorsLayer;
 use controllers::book_controller::BookController;
 use controllers::customer_controller::CustomerController;
 use controllers::Controller;
 use tower_http::set_header::SetRequestHeaderLayer;
+use tower_http::trace::TraceLayer;
 use tower_http::ServiceBuilderExt;
 use crate::repositories::book_repository::*;
 use crate::routes::*;
@@ -56,25 +59,26 @@ async fn main()   {
             repository : BooksRepository::new(db.clone())
         });
 
-    let header_middle = SetRequestHeaderLayer::if_not_present(HeaderName::from_static("myaa"),HeaderValue::from_static("my custom header"));
+
+    //let header_middle = SetRequestHeaderLayer::if_not_present(HeaderName::from_static("myaa"),HeaderValue::from_static("my custom header"));
 
 
     let app  = Router::new()
-        .route("/books", get(BookController::handle_get_models)).with_state(book_state)
-        .layer(
-            ServiceBuilder::new()
-                .compression()
-        )
-        .layer(
+        .route("/books", get(BookController::handle_get_models).post(BookController::tes)).with_state(book_state)
+        .layer(CompressionLayer::new())
 
+        .layer(CatchPanicLayer::new())
+
+        .layer(TraceLayer::new_for_http())
+        .layer(
             CorsLayer::new()
                 .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
                 .allow_methods([Method::GET, Method::POST, Method::PUT])
         )
-        .layer(middleware::from_fn(middle::set_a_header))
+
     ;
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3001").await.unwrap();
 
     println!("Listening on 3000");
 

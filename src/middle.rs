@@ -1,16 +1,35 @@
-use axum::{extract::{FromRequest, Request}, http::{ HeaderName, HeaderValue,  StatusCode}, middleware::Next, response::IntoResponse, BoxError, RequestExt};
-
-use crate::models::book_models::Books;
+use axum::{async_trait, extract::{FromRequest, FromRequestParts, Request}, http::{ header, request::Parts, HeaderName, HeaderValue, StatusCode}, middleware::Next, response::IntoResponse, BoxError, RequestExt};
 
 
-pub async fn set_a_header(req :   Request, next : Next) -> impl IntoResponse {
+pub async fn authorize(req :   Request, next : Next) -> Result<impl IntoResponse , (StatusCode, impl IntoResponse)>{
 
-    let mut res = next.run(req).await;
+    let auth = req.headers().get(header::AUTHORIZATION);
 
-    res.headers().insert("another", HeaderValue::from_static("alskdjsalk"));
+    match auth {
+        Some(a) => {
+            let  res = next.run(req).await;
 
-    println!("run a middle");
+            println!("aslkdjsal");
 
-    res
+            Ok(res)
+        },
+        None => Err((StatusCode::UNAUTHORIZED, "UNAUTHORIZED")),
+    }
+
+}
+
+pub struct ExtractJwt(pub HeaderValue);
+
+#[async_trait]
+impl<S> FromRequestParts<S> for ExtractJwt where S : Send + Sync  {
+    type Rejection = (StatusCode, &'static str);
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        if let Some(jwt) = parts.headers.get("jwt") {
+            return Ok(ExtractJwt(jwt.clone()))
+        } 
+        Err((StatusCode::UNAUTHORIZED, "`json web token not found` header is missing"))
+        
+    }
 
 }

@@ -5,6 +5,7 @@ use axum::{ debug_handler, extract::State, http::StatusCode, response::IntoRespo
 use axum::extract::*;
 use serde_json::{json, Value};
 
+use crate::ExtractJwt;
 use crate::{models::book_models::Books, repositories::Repository, AppStateBooks,  BooksRepository};
 
 
@@ -20,7 +21,6 @@ impl super::Controller<Books, AppStateBooks<BooksRepository>> for BookController
         let repository = &state.repository;
 
 
-        println!("{}", req.headers().get("another").unwrap().to_str().unwrap());
 
         let response = repository.find_all().await;
 
@@ -43,11 +43,9 @@ impl super::Controller<Books, AppStateBooks<BooksRepository>> for BookController
 
 impl BookController {
     
-    pub async fn tes(req : axum::extract::Request) -> impl IntoResponse {
+    pub async fn tes(ExtractJwt(jwt) : ExtractJwt) -> impl IntoResponse {
 
-        let hea = req.headers().get("another").unwrap();
-
-        println!("{}", hea.to_str().unwrap());
+        println!("the jwt is: {}", jwt.to_str().unwrap());
 
         "hola middle"
     }

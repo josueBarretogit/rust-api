@@ -1,3 +1,6 @@
+use std::sync::Arc;
+
+use axum::middleware::Next;
 use axum::{ debug_handler, extract::State, http::StatusCode, response::IntoResponse, Extension, Json};
 use axum::extract::*;
 use serde_json::{json, Value};
@@ -12,10 +15,12 @@ pub struct BookController {}
 
 impl super::Controller<Books, AppStateBooks<BooksRepository>> for BookController {
 
-    async fn handle_get_models(state: Extension<AppStateBooks<BooksRepository>>) -> Result<Json<Vec<Books>>, (StatusCode, Json<Value>)> {
+    async fn handle_get_models(state: State<Arc<AppStateBooks<BooksRepository>>>, req : axum::extract::Request) -> Result<Json<Vec<Books>>, (StatusCode, Json<Value>)> {
 
         let repository = &state.repository;
 
+
+        println!("{}", req.headers().get("another").unwrap().to_str().unwrap());
 
         let response = repository.find_all().await;
 
@@ -38,9 +43,11 @@ impl super::Controller<Books, AppStateBooks<BooksRepository>> for BookController
 
 impl BookController {
     
-    pub async fn tes(Extension(var_to_pass): Extension<String>) -> impl IntoResponse {
+    pub async fn tes(req : axum::extract::Request) -> impl IntoResponse {
 
-        println!("{var_to_pass}");
+        let hea = req.headers().get("another").unwrap();
+
+        println!("{}", hea.to_str().unwrap());
 
         "hola middle"
     }

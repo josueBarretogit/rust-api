@@ -1,9 +1,10 @@
 #![forbid(unsafe_code)]
 use std::process;
 use std::sync::Arc;
+use axum::extract::DefaultBodyLimit;
 use axum::handler::Handler;
 use axum::http::{HeaderName, HeaderValue, Method};
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{middleware, Extension, Router};
 use tower::ServiceBuilder;
 use tower_http::catch_panic::CatchPanicLayer;
@@ -12,6 +13,7 @@ use tower_http::cors::CorsLayer;
 use controllers::book_controller::BookController;
 use controllers::customer_controller::CustomerController;
 use controllers::Controller;
+use tower_http::limit::{RequestBodyLimit, RequestBodyLimitLayer};
 use tower_http::set_header::SetRequestHeaderLayer;
 use tower_http::trace::TraceLayer;
 use tower_http::ServiceBuilderExt;
@@ -65,10 +67,11 @@ async fn main()   {
 
     let app  = Router::new()
         .route("/books", get(BookController::handle_get_models).post(BookController::tes)).with_state(book_state)
+        .route("/upload", post(BookController::upload_images)).
+        layer(DefaultBodyLimit::disable()).
+        layer(RequestBodyLimitLayer::new( 250 * 1024 * 1024, /* 250mb */))
         .layer(CompressionLayer::new())
-
         .layer(CatchPanicLayer::new())
-
         .layer(TraceLayer::new_for_http())
         .layer(
             CorsLayer::new()

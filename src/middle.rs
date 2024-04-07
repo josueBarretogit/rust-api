@@ -12,18 +12,32 @@ pub async fn authorize(
     next: Next,
 ) -> Result<impl IntoResponse, (StatusCode, impl IntoResponse)> {
     let auth = req.headers().get(header::AUTHORIZATION);
-
     match auth {
         Some(a) => {
             let res = next.run(req).await;
-
             println!("aslkdjsal");
-
             Ok(res)
         }
         None => Err((StatusCode::UNAUTHORIZED, "UNAUTHORIZED")),
     }
 }
+
+
+pub async fn verify_files(
+    req: Request,
+    next: Next,
+) -> Result<impl IntoResponse, (StatusCode, impl IntoResponse)> {
+    let auth = req.headers().get(header::AUTHORIZATION);
+    match auth {
+        Some(a) => {
+            let res = next.run(req).await;
+            println!("aslkdjsal");
+            Ok(res)
+        }
+        None => Err((StatusCode::UNAUTHORIZED, "UNAUTHORIZED")),
+    }
+}
+
 
 pub struct ExtractJwt(pub HeaderValue);
 

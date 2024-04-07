@@ -8,8 +8,9 @@ use axum::http::{HeaderName, HeaderValue, Method};
 use axum::routing::{get, post};
 use axum::{middleware, Extension, Router};
 use controllers::book_controller::BookController;
-use controllers::customer_controller::CustomerController;
+use controllers::file_controller::*;
 use controllers::Controller;
+use controllers::*;
 use sqlx::postgres::PgPoolOptions;
 use std::process;
 use std::sync::Arc;
@@ -26,6 +27,8 @@ mod models;
 mod repositories;
 mod routes;
 mod services;
+mod helpers;
+
 
 #[macro_export]
 macro_rules! set_routes {
@@ -61,10 +64,10 @@ async fn main() {
     let app = Router::new()
         .route(
             "/books",
-            get(BookController::handle_get_models).post(BookController::tes),
+            get(BookController::handle_get_models).post(BookController::handle_get_models),
         )
         .with_state(book_state)
-        .route("/upload", post(BookController::upload_images))
+        .route("/upload", post(FileController::handle_upload))
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new(
             250 * 1024 * 1024, /* 250mb */

@@ -51,29 +51,34 @@ impl BookController {
     }
 
     pub async fn upload_images(mut mult: Multipart) -> impl IntoResponse {
-        let mut current_dir = std::env::current_dir().unwrap();
-        current_dir.push("uploads");
+
+        let  current_dir = std::env::current_dir().unwrap().join("uploads");
+
+        if !Path::new(&current_dir).exists() {
+            fs::create_dir_all(&current_dir).unwrap();
+        }
+            
 
         while let Some(field) = mult.next_field().await.unwrap() {
-            let name = field.name().unwrap().to_string();
+            let original_file_name = field.file_name().unwrap().to_string();
             let data = field.bytes().await.unwrap();
 
-            //fs::create_dir_all(&current_dir).unwrap();
+            println!("original file name : {:?}", original_file_name);
 
             let current_time = chrono::Local::now().timestamp_millis();
 
-            let mut file_name = current_time.to_string().to_owned(); 
+            let mut file_name = PathBuf::from(current_time.to_string());
 
-            let extension : &str = ".jpg";
+            let extension  = Path::new(&original_file_name).extension().unwrap();
 
-            file_name.push_str(extension);
+            file_name.set_extension(extension);
 
-            current_dir.push(file_name);
+            let destination_file  = current_dir.join(file_name);
 
 
-            println!("{}", current_dir.to_str().unwrap());
+            println!("{:#?}", destination_file);
 
-            let mut newfile = File::create(&current_dir).await.unwrap_or_else(|err| {
+            let mut newfile = File::create(&destination_file).await.unwrap_or_else(|err| {
                 println!("{err}");
                 panic!("could not ")
             });

@@ -14,6 +14,7 @@ use serde_json::Value;
 
 pub mod book_controller;
 pub mod customer_controller;
+pub mod file_controller;
 
 /// T: model, K: appstate
 pub trait Controller<T, K>

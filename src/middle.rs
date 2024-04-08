@@ -22,7 +22,6 @@ pub async fn authorize(
     }
 }
 
-
 pub async fn verify_files(
     req: Request,
     next: Next,
@@ -37,7 +36,6 @@ pub async fn verify_files(
         None => Err((StatusCode::UNAUTHORIZED, "UNAUTHORIZED")),
     }
 }
-
 
 pub struct ExtractJwt(pub HeaderValue);
 

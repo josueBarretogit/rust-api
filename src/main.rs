@@ -12,6 +12,7 @@ use controllers::file_controller::*;
 use controllers::Controller;
 use controllers::*;
 use sqlx::postgres::PgPoolOptions;
+use std::path::PathBuf;
 use std::process;
 use std::sync::Arc;
 use tower::ServiceBuilder;
@@ -22,13 +23,12 @@ use tower_http::limit::{RequestBodyLimit, RequestBodyLimitLayer};
 use tower_http::trace::TraceLayer;
 
 mod controllers;
+mod helpers;
 mod middle;
 mod models;
 mod repositories;
 mod routes;
 mod services;
-mod helpers;
-
 
 #[macro_export]
 macro_rules! set_routes {
@@ -46,6 +46,7 @@ async fn main() {
         eprint!("details: {err}");
         process::exit(1)
     });
+
 
     let db_uri = dotenvy::var("DB_URI").expect("must have a db uri env");
 

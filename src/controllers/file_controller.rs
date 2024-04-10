@@ -9,6 +9,9 @@ use super::FileHandler;
 
 pub struct FileController {}
 
+//handle errors or make middleware to allow only images to be uploaded
+//make helper to make responses easier
+
 impl FileHandler for FileController {
     async fn handle_upload(mut mult: Multipart) -> impl IntoResponse {
         let directory_to_store_files = std::env::current_dir().unwrap().join("uploads");
@@ -33,7 +36,9 @@ impl FileHandler for FileController {
 
             match save_file_result {
                 Ok(file_stored) => {
-                    let compress_result = compress_file(file_stored, directory_to_store_files.join("compressed")).await;
+                    let compress_result =
+                        compress_file(file_stored, directory_to_store_files.join("compressed"))
+                            .await;
 
                     match compress_result {
                         Ok(_) => println!("file compressed!!"),

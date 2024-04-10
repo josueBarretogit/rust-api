@@ -47,8 +47,9 @@ async fn main() {
         process::exit(1)
     });
 
+    let db_uri = dotenvy::var("DATABASE_URL").expect("must have a db uri env");
 
-    let db_uri = dotenvy::var("DB_URI").expect("must have a db uri env");
+    let port = dotenvy::var("PORT").expect("must have a port");
 
     let db = PgPoolOptions::new()
         .max_connections(50)
@@ -68,7 +69,10 @@ async fn main() {
             get(BookController::handle_get_models).post(BookController::handle_get_models),
         )
         .with_state(book_state)
-        .route("/upload", post(FileController::handle_upload))
+        .route(
+            "/upload",
+            post(FileController::handle_upload).layer(middleware::from_fn(verify_images)),
+        )
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new(
             250 * 1024 * 1024, /* 250mb */

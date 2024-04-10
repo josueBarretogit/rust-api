@@ -22,7 +22,6 @@ impl<'a> NewFile<'a> {
 }
 
 pub async fn save_file(new_file: NewFile<'_>) -> Result<NewFile<'_>, std::io::Error> {
-
     if !Path::new(&new_file.file_path.parent().unwrap()).exists() {
         fs::create_dir_all(&new_file.file_path.parent().unwrap()).unwrap();
     }
@@ -39,16 +38,16 @@ pub async fn save_file(new_file: NewFile<'_>) -> Result<NewFile<'_>, std::io::Er
     Ok(NewFile::new(new_file.file_path, new_file.bytes))
 }
 
-pub async fn compress_file(file_to_compress: NewFile<'_>, directory : PathBuf) -> Result<(), Box<dyn Error>> {
-
-    println!(" file : {:?} path : {}", file_to_compress.file_path, directory.to_str().unwrap());
+pub async fn compress_file(
+    file_to_compress: NewFile<'_>,
+    directory: PathBuf,
+) -> Result<(), Box<dyn Error>> {
 
 
     if !Path::new(&directory).exists() {
         fs::create_dir_all(&directory).unwrap();
     }
 
-    
     let mut compressor = Compressor::new(file_to_compress.file_path, directory);
 
     compressor.set_factor(Factor::new(80., 0.8));

@@ -71,7 +71,7 @@ async fn main() {
         .with_state(book_state)
         .route(
             "/upload",
-            post(FileController::handle_upload).layer(middleware::from_fn(verify_images)),
+            post(FileController::handle_upload),
         )
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new(

@@ -24,25 +24,6 @@ pub async fn authorize(
     }
 }
 
-pub async fn verify_images(
-    mult : Multipart,
-    req: Request,
-    next: Next,
-) -> Result<impl IntoResponse, (StatusCode, impl IntoResponse)> {
-
-
-    
-
-
-    let regex_validate_images = Regex::new(r"jpg|jpeg|png").ok().unwrap();
-
-    if !regex_validate_images.is_match("images/jpg") {
-        return Err((StatusCode::FORBIDDEN, "that file type is not permited"));
-    }
-
-    let res = next.run(req).await;
-    Ok(res)
-}
 
 pub struct ExtractJwt(pub HeaderValue);
 
@@ -54,6 +35,8 @@ where
     type Rejection = (StatusCode, &'static str);
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+
+
         if let Some(jwt) = parts.headers.get("jwt") {
             return Ok(ExtractJwt(jwt.clone()));
         }

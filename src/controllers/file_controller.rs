@@ -1,9 +1,9 @@
 use std::path::{Path, PathBuf};
 
-use axum::{extract::Multipart, http::StatusCode, response::IntoResponse};
+use axum::{extract::Multipart, http::StatusCode, response::{self, IntoResponse}};
 use sqlx::types::chrono;
 
-use crate::helpers::helpers::{compress_file, save_file, NewFile};
+use crate::helpers::helpers::{compress_file, save_file, verify_images, NewFile};
 
 use super::FileHandler;
 
@@ -17,8 +17,17 @@ impl FileHandler for FileController {
         let directory_to_store_files = std::env::current_dir().unwrap().join("uploads");
 
         while let Some(field) = mult.next_field().await.unwrap() {
+            let content_type = field.content_type().unwrap();
+
+            if !verify_images(content_type) {
+                let response = "file not permitted: ".to_owned() + content_type;
+                return (StatusCode::FORBIDDEN, response.to_string()) 
+            }
+
             let original_file_name = field.file_name().unwrap().to_string();
+
             let bytes = field.bytes().await.unwrap();
+
 
             let current_time = chrono::Local::now().timestamp_millis();
 

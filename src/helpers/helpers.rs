@@ -55,3 +55,9 @@ pub async fn compress_file(
 
     Ok(())
 }
+
+pub fn verify_images(content_type : &str) -> bool {
+
+    let regex_validate_images = regex::Regex::new(r"jpg|jpeg|png").unwrap();
+    regex_validate_images.is_match(content_type)
+}

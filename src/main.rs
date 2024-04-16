@@ -3,8 +3,7 @@ use crate::middle::*;
 use crate::repositories::book_repository::*;
 use crate::routes::*;
 use axum::extract::DefaultBodyLimit;
-use axum::handler::Handler;
-use axum::http::{HeaderName, HeaderValue, Method};
+use axum::http::{method, HeaderName, HeaderValue, Method};
 use axum::routing::{get, post};
 use axum::{middleware, Extension, Router};
 use controllers::book_controller::BookController;
@@ -12,10 +11,8 @@ use controllers::file_controller::*;
 use controllers::Controller;
 use controllers::*;
 use sqlx::postgres::PgPoolOptions;
-use std::path::PathBuf;
-use std::process;
+use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::Arc;
-use tower::ServiceBuilder;
 use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::compression::CompressionLayer;
 use tower_http::cors::CorsLayer;
@@ -42,23 +39,26 @@ macro_rules! set_routes {
 
 #[tokio::main]
 async fn main() {
-    dotenvy::dotenv().unwrap_or_else(|err| {
-        eprint!("details: {err}");
-        process::exit(1)
-    });
+    dotenvy::dotenv().expect("Could not load env variables");
 
     let db_uri = dotenvy::var("DATABASE_URL").expect("must have a db uri env");
 
     let port = dotenvy::var("PORT").expect("must have a port");
 
+    let port = port.parse::<u16>().expect("the port could not be parsed to be a valid number"); 
+
+    let socket_address = SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::new(127, 0 ,0, 1)), port);
+
     let db = PgPoolOptions::new()
         .max_connections(50)
         .connect(&db_uri)
         .await
-        .expect("could not connect to db");
+        .expect("could not connect to database");
+
+    let book_repo = Arc::new(db);
 
     let book_state = Arc::new(AppStateBooks {
-        repository: BooksRepository::new(db.clone()),
+        repository: BooksRepository::new(Arc::clone(&book_repo)),
     });
 
     //let header_middle = SetRequestHeaderLayer::if_not_present(HeaderName::from_static("myaa"),HeaderValue::from_static("my custom header"));
@@ -83,14 +83,14 @@ async fn main() {
         .layer(
             CorsLayer::new()
                 .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
-                .allow_methods([Method::GET, Method::POST, Method::PUT]),
+                .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE]),
         );
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3001")
+    let listener = tokio::net::TcpListener::bind(socket_address)
         .await
         .unwrap();
 
-    println!("Listening on 3000");
+    println!("Listening on port: {}", socket_address.port());
 
     axum::serve(listener, app).await.unwrap();
 }

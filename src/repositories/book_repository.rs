@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::BoxError;
 use sqlx::{postgres::PgPoolOptions, PgPool, Pool, Postgres};
 
@@ -7,7 +9,7 @@ use super::Repository;
 
 #[derive(Clone, Debug)]
 pub struct BooksRepository {
-    pub db: PgPool,
+    pub db: Arc<PgPool>,
 }
 
 impl Repository<Books> for BooksRepository {
@@ -16,7 +18,7 @@ impl Repository<Books> for BooksRepository {
             Books,
             "SELECT description as description, title as title from books"
         )
-        .fetch_all(&self.db)
+        .fetch_all(&*self.db)
         .await?;
 
         // let db_response = vec![Books::new(Some("a desc".to_string()), Some("a title".to_string()))];
@@ -26,7 +28,7 @@ impl Repository<Books> for BooksRepository {
 }
 
 impl BooksRepository {
-    pub fn new(pool: PgPool) -> Self {
+    pub fn new(pool: Arc<PgPool>) -> Self {
         BooksRepository { db: pool }
     }
 }

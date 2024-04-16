@@ -1,13 +1,9 @@
 use axum::{
-    async_trait,
-    extract::{FromRequest, FromRequestParts, Multipart, Request},
-    http::{header, request::Parts, HeaderMap, HeaderName, HeaderValue, StatusCode},
-    middleware::Next,
-    response::IntoResponse,
-    BoxError, RequestExt,
+    async_trait, extract::{FromRequest, FromRequestParts, Multipart, Request}, http::{header, request::Parts, HeaderMap, HeaderName, HeaderValue, StatusCode}, middleware::Next, response::IntoResponse, BoxError, Json, RequestExt
 };
 
 use regex::*;
+use serde_json::{json, Value};
 
 pub async fn authorize(
     req: Request,
@@ -45,4 +41,8 @@ where
             "`json web token not found` header is missing",
         ))
     }
+}
+
+pub fn ok_response(statuscode:  StatusCode, message :  Json<Value>) -> (StatusCode, Json<Value>) {
+    (StatusCode::OK, Json(json!({"response" : "ok"})))
 }

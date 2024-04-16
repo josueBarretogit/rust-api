@@ -9,7 +9,7 @@ use super::FileHandler;
 
 pub struct FileController {}
 
-//handle errors or make middleware to allow only images to be uploaded
+//handle errors 
 //make helper to make responses easier
 
 impl FileHandler for FileController {

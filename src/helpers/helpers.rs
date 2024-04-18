@@ -1,12 +1,10 @@
 use std::{
-    error::Error,
-    fs,
-    path::{Path, PathBuf},
-    str::Bytes,
+    error::Error, fs, num::NonZeroU16, path::{Path, PathBuf}, str::Bytes
 };
 
+use axum::{http::StatusCode, response::IntoResponse, Json};
 use image_compressor::{compressor::Compressor, Factor};
-use sqlx::types::chrono;
+use serde::Serialize;
 use tokio::{fs::File, io::AsyncWriteExt};
 
 #[derive(Debug)]
@@ -18,6 +16,45 @@ pub struct NewFile<'a> {
 impl<'a> NewFile<'a> {
     pub fn new(file_path: PathBuf, bytes: &'a [u8]) -> NewFile<'a> {
         NewFile { file_path, bytes }
+    }
+}
+
+pub enum Responder 
+{
+    DatabaseError(Box<dyn Error>)
+}
+
+#[derive(Serialize, Debug)]
+struct ErrorRequest {
+    pub status_code : NonZeroU16,
+    pub scope : String, 
+    pub details : String
+}
+
+impl Default for ErrorRequest {
+    fn default() -> Self {
+        Self { status_code: NonZeroU16::new(400).unwrap(), scope: "Server".to_string(), details: "".to_string()}
+    }
+}
+
+impl IntoResponse for Responder {
+    
+    fn into_response(self) -> axum::response::Response {
+
+        let mut response = ErrorRequest::default();
+        match self {
+            Self::DatabaseError(error) => {
+                response.status_code = NonZeroU16::new(500).unwrap();
+
+                response.scope = "Database".to_string();
+
+                response.details = error.to_string();
+
+
+                (StatusCode::INTERNAL_SERVER_ERROR, Json(response)).into_response()
+
+            }
+        }
     }
 }
 

@@ -12,6 +12,7 @@ pub struct BooksRepository {
     pub db: Arc<PgPool>,
 }
 
+
 impl Repository<Books> for BooksRepository {
     async fn find_all(&self) -> Result<Vec<Books>, BoxError> {
         let db_response = sqlx::query_as!(

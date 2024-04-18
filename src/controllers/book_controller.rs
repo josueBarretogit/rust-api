@@ -8,13 +8,14 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use crate::controllers::*;
 
+use crate::helpers::helpers::Responder;
 use crate::{models::book_models::Books, repositories::Repository, AppStateBooks, BooksRepository};
 
 pub struct BookController {}
 
 impl super::Controller<Books, AppStateBooks<BooksRepository>> for BookController {
 
-    async fn handle_get_models( state: StateController<AppStateBooks<BooksRepository>>) -> GetAllResponse<Books> {
+    async fn handle_get_models(state: StateController<AppStateBooks<BooksRepository>>) -> Result<Json<Vec<Books>>, impl IntoResponse> {
         
         let repository = &state.repository;
 
@@ -22,10 +23,7 @@ impl super::Controller<Books, AppStateBooks<BooksRepository>> for BookController
 
         match response {
             Ok(books) => Ok(Json(books)),
-            Err(e) => Err((
-                StatusCode::BAD_REQUEST,
-                Json(json!({"response" : "bad request", "details" : e.to_string()})),
-            )),
+            Err(database_error) => Err(Responder::DatabaseError(database_error))  
         }
     }
 

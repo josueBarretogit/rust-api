@@ -23,11 +23,9 @@ impl<'a> NewFile<'a> {
 
 
 
-pub enum Responder<T> 
-    where T: Serialize
-{
-    Ok(T),
-    DatabaseError(Box<dyn Error>),
+pub enum Responder {
+    Ok(serde_json::Value),
+    DatabaseError(sqlx::Error),
     BadRequest(String)
 }
 
@@ -40,9 +38,9 @@ struct ErrorRequest {
 
 
 #[derive(Serialize, Debug)]
-struct OkResponse<T> {
+struct OkResponse {
     pub success : bool,
-    pub data : T
+    pub data : serde_json::Value
 }
 
 
@@ -56,9 +54,7 @@ impl Default for ErrorRequest {
     }
 }
 
-impl<T> IntoResponse for Responder<T>
-    where T: Serialize
-{
+impl IntoResponse for Responder {
     
     fn into_response(self) -> axum::response::Response {
 

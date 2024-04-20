@@ -11,3 +11,20 @@ impl Books {
         Books { description, title }
     }
 }
+
+
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
+pub struct Roles {
+    pub id : i64,
+    pub rolename: String,
+}
+
+
+
+impl Roles {
+    pub fn new(rolename: String ) -> Self {
+        Roles { id: 1, rolename }
+    }
+}
+
+

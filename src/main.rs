@@ -6,7 +6,7 @@ use axum::extract::DefaultBodyLimit;
 use axum::http::{method, HeaderName, HeaderValue, Method};
 use axum::routing::{get, post};
 use axum::{middleware, Extension, Router};
-use controllers::book_controller::BookController;
+use controllers::book_controller::*;
 use controllers::file_controller::*;
 use controllers::Controller;
 use controllers::*;
@@ -56,20 +56,31 @@ async fn main() {
         .await
         .expect("could not connect to database");
 
-    let book_repo = Arc::new(db);
+    let db_shared_pool = Arc::new(db);
 
     let book_state = Arc::new(AppStateBooks {
-        repository: BooksRepository::new(Arc::clone(&book_repo)),
+        repository: BooksRepository::new(Arc::clone(&db_shared_pool)),
     });
+
+
+    let role_state = Arc::new(AppStateRoles {
+        repository: RolesRepository::new(Arc::clone(&db_shared_pool)),
+    });
+
 
     //let header_middle = SetRequestHeaderLayer::if_not_present(HeaderName::from_static("myaa"),HeaderValue::from_static("my custom header"));
 
     let app = Router::new()
         .route(
             "/books",
-            get(BookController::handle_get_models).post(BookController::handle_get_models),
+            get(BookController::handle_get_models).post(BookController::handle_create_model),
         )
         .with_state(book_state)
+        .route(
+            "/roles",
+            get(RolesController::handle_get_models).post(RolesController::handle_create_model),
+        )
+        .with_state(role_state)
         .route(
             "/upload",
             post(FileController::handle_upload),

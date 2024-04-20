@@ -25,7 +25,7 @@ where
     T: Serialize,
     K: Clone,
 {
-    async fn handle_get_models( state: StateController<K>) -> Result<Json<Vec<T>>, impl IntoResponse>;
+    async fn handle_get_models( state: StateController<K>) -> Result<impl IntoResponse, impl IntoResponse>;
 
     async fn handle_create_model(body: axum::extract::Json<T>) -> impl IntoResponse;
 }

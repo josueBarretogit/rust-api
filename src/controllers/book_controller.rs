@@ -15,14 +15,14 @@ pub struct BookController {}
 
 impl super::Controller<Books, AppStateBooks<BooksRepository>> for BookController {
 
-    async fn handle_get_models(state: StateController<AppStateBooks<BooksRepository>>) -> Result<Json<Vec<Books>>, impl IntoResponse> {
+    async fn handle_get_models(state: StateController<AppStateBooks<BooksRepository>>) -> Result<impl IntoResponse, impl IntoResponse> {
         
         let repository = &state.repository;
 
         let response = repository.find_all().await;
 
         match response {
-            Ok(books) => Ok(Json(books)),
+            Ok(books) => Ok(Responder::<Vec<Books>>::Ok(books)),
             Err(database_error) => Err(Responder::DatabaseError(database_error))  
         }
     }

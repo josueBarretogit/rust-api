@@ -2,7 +2,7 @@ use std::{
     default, error::Error, fmt::{Debug, Display}, fs, num::NonZeroU16, path::{Path, PathBuf}, str::Bytes
 };
 
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use axum::{http::{Response, StatusCode}, response::IntoResponse, Json};
 use image_compressor::{compressor::Compressor, Factor};
 use serde::Serialize;
 use tokio::{fs::File, io::AsyncWriteExt};
@@ -23,11 +23,12 @@ impl<'a> NewFile<'a> {
 
 
 
-pub enum Responder<E> 
-    where E:  Debug + Display
+pub enum Responder<T> 
+    where T: Serialize
 {
-    DatabaseError(E),
-    BadRequest(E)
+    Ok(T),
+    DatabaseError(Box<dyn Error>),
+    BadRequest(String)
 }
 
 #[derive(Serialize, Debug)]
@@ -37,18 +38,26 @@ struct ErrorRequest {
     pub details : String
 }
 
+
+#[derive(Serialize, Debug)]
+struct OkResponse<T> {
+    pub success : bool,
+    pub data : T
+}
+
+
 impl Default for ErrorRequest {
     fn default() -> Self {
         Self { 
             error_code: SERVER_ERROR.to_string(), 
-            scope: SERVER_ERROR.to_string(),
+            scope: default::Default::default(),
             details: default::Default::default()
         }
     }
 }
 
-impl<E> IntoResponse for Responder<E> 
-where E:    Debug + Display 
+impl<T> IntoResponse for Responder<T>
+    where T: Serialize
 {
     
     fn into_response(self) -> axum::response::Response {
@@ -56,20 +65,31 @@ where E:    Debug + Display
         let mut response = ErrorRequest::default();
 
         match self {
+            Self::Ok(data) => {
+
+                let ok_response = OkResponse {
+                    data,
+                    success : true
+                };
+
+                (StatusCode::OK, Json(ok_response)).into_response()
+            },
             Self::DatabaseError(error) => {
                 response.details = error.to_string();
                 response.error_code =   DB_ERROR_CODE.to_string();
                 (StatusCode::INTERNAL_SERVER_ERROR, Json(response)).into_response()
             },
                 Self::BadRequest(message) => {
-                response.details = message.to_string();
+                response.details = message;
                 response.error_code = BAD_REQUEST.to_string();
+
 
                 (StatusCode::BAD_REQUEST, Json(response)).into_response()
             }
         }
     }
 }
+
 
 pub async fn save_file(new_file: NewFile<'_>) -> Result<NewFile<'_>, std::io::Error> {
     if !Path::new(&new_file.file_path.parent().unwrap()).exists() {

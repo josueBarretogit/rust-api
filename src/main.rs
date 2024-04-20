@@ -26,6 +26,7 @@ mod models;
 mod repositories;
 mod routes;
 mod services;
+mod r#const;
 
 #[macro_export]
 macro_rules! set_routes {

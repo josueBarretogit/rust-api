@@ -24,7 +24,7 @@ impl Repository<Books> for BooksRepository {
 
         // let db_response = vec![Books::new(Some("a desc".to_string()), Some("a title".to_string()))];
 
-        Ok(db_response)
+        Err("a bad erro".into())
     }
 }
 

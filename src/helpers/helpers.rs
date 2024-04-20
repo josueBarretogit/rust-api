@@ -1,11 +1,13 @@
 use std::{
-    error::Error, fs, num::NonZeroU16, path::{Path, PathBuf}, str::Bytes
+    default, error::Error, fmt::{Debug, Display}, fs, num::NonZeroU16, path::{Path, PathBuf}, str::Bytes
 };
 
 use axum::{http::StatusCode, response::IntoResponse, Json};
 use image_compressor::{compressor::Compressor, Factor};
 use serde::Serialize;
 use tokio::{fs::File, io::AsyncWriteExt};
+
+use crate::r#const::{BAD_REQUEST, DB_ERROR_CODE, SERVER_ERROR};
 
 #[derive(Debug)]
 pub struct NewFile<'a> {
@@ -19,40 +21,51 @@ impl<'a> NewFile<'a> {
     }
 }
 
-pub enum Responder 
+
+
+pub enum Responder<E> 
+    where E:  Debug + Display
 {
-    DatabaseError(Box<dyn Error>)
+    DatabaseError(E),
+    BadRequest(E)
 }
 
 #[derive(Serialize, Debug)]
 struct ErrorRequest {
-    pub status_code : NonZeroU16,
+    pub error_code : String,
     pub scope : String, 
     pub details : String
 }
 
 impl Default for ErrorRequest {
     fn default() -> Self {
-        Self { status_code: NonZeroU16::new(400).unwrap(), scope: "Server".to_string(), details: "".to_string()}
+        Self { 
+            error_code: SERVER_ERROR.to_string(), 
+            scope: SERVER_ERROR.to_string(),
+            details: default::Default::default()
+        }
     }
 }
 
-impl IntoResponse for Responder {
+impl<E> IntoResponse for Responder<E> 
+where E:    Debug + Display 
+{
     
     fn into_response(self) -> axum::response::Response {
 
         let mut response = ErrorRequest::default();
+
         match self {
             Self::DatabaseError(error) => {
-                response.status_code = NonZeroU16::new(500).unwrap();
-
-                response.scope = "Database".to_string();
-
                 response.details = error.to_string();
-
-
+                response.error_code =   DB_ERROR_CODE.to_string();
                 (StatusCode::INTERNAL_SERVER_ERROR, Json(response)).into_response()
+            },
+                Self::BadRequest(message) => {
+                response.details = message.to_string();
+                response.error_code = BAD_REQUEST.to_string();
 
+                (StatusCode::BAD_REQUEST, Json(response)).into_response()
             }
         }
     }

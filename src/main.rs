@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 use crate::middle::*;
+use crate::models::book_models::*;
 use crate::repositories::book_repository::*;
 use crate::routes::*;
 use axum::extract::DefaultBodyLimit;
@@ -19,6 +20,7 @@ use tower_http::cors::CorsLayer;
 use tower_http::limit::{RequestBodyLimit, RequestBodyLimitLayer};
 use tower_http::trace::TraceLayer;
 
+mod r#const;
 mod controllers;
 mod helpers;
 mod middle;
@@ -26,7 +28,6 @@ mod models;
 mod repositories;
 mod routes;
 mod services;
-mod r#const;
 
 #[macro_export]
 macro_rules! set_routes {
@@ -46,9 +47,11 @@ async fn main() {
 
     let port = dotenvy::var("PORT").expect("must have a port");
 
-    let port = port.parse::<u16>().expect("the port could not be parsed to be a valid number"); 
+    let port = port
+        .parse::<u16>()
+        .expect("the port could not be parsed to be a valid number");
 
-    let socket_address = SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::new(127, 0 ,0, 1)), port);
+    let socket_address = SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port);
 
     let db = PgPoolOptions::new()
         .max_connections(50)
@@ -62,11 +65,9 @@ async fn main() {
         repository: BooksRepository::new(Arc::clone(&db_shared_pool)),
     });
 
-
     let role_state = Arc::new(AppStateRoles {
         repository: RolesRepository::new(Arc::clone(&db_shared_pool)),
     });
-
 
     //let header_middle = SetRequestHeaderLayer::if_not_present(HeaderName::from_static("myaa"),HeaderValue::from_static("my custom header"));
 
@@ -81,10 +82,7 @@ async fn main() {
             get(RolesController::handle_get_models).post(RolesController::handle_create_model),
         )
         .with_state(role_state)
-        .route(
-            "/upload",
-            post(FileController::handle_upload),
-        )
+        .route("/upload", post(FileController::handle_upload))
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new(
             250 * 1024 * 1024, /* 250mb */
@@ -98,9 +96,7 @@ async fn main() {
                 .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE]),
         );
 
-    let listener = tokio::net::TcpListener::bind(socket_address)
-        .await
-        .unwrap();
+    let listener = tokio::net::TcpListener::bind(socket_address).await.unwrap();
 
     println!("Listening on port: {}", socket_address.port());
 

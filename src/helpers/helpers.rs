@@ -1,8 +1,18 @@
 use std::{
-    default, error::Error, fmt::{Debug, Display}, fs, num::NonZeroU16, path::{Path, PathBuf}, str::Bytes
+    default,
+    error::Error,
+    fmt::{Debug, Display},
+    fs,
+    num::NonZeroU16,
+    path::{Path, PathBuf},
+    str::Bytes,
 };
 
-use axum::{http::{Response, StatusCode}, response::IntoResponse, Json};
+use axum::{
+    http::{Response, StatusCode},
+    response::IntoResponse,
+    Json,
+};
 use image_compressor::{compressor::Compressor, Factor};
 use serde::Serialize;
 use tokio::{fs::File, io::AsyncWriteExt};
@@ -21,71 +31,70 @@ impl<'a> NewFile<'a> {
     }
 }
 
-
-
 pub enum Responder {
     Ok(serde_json::Value),
-    DatabaseError(sqlx::Error),
-    BadRequest(String)
+    CREATED(serde_json::Value),
+    DatabaseError(sqlx::Error, String),
+    BadRequest(String),
 }
 
 #[derive(Serialize, Debug)]
 struct ErrorRequest {
-    pub error_code : String,
-    pub scope : String, 
-    pub details : String
+    pub error_code: String,
+    pub scope: String,
+    pub details: String,
 }
 
-
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Default)]
 struct OkResponse {
-    pub success : bool,
-    pub data : serde_json::Value
+    pub success: bool,
+    pub data: serde_json::Value,
 }
-
 
 impl Default for ErrorRequest {
     fn default() -> Self {
-        Self { 
-            error_code: SERVER_ERROR.to_string(), 
+        Self {
+            error_code: SERVER_ERROR.to_string(),
             scope: default::Default::default(),
-            details: default::Default::default()
+            details: default::Default::default(),
         }
     }
 }
 
 impl IntoResponse for Responder {
-    
     fn into_response(self) -> axum::response::Response {
-
         let mut response = ErrorRequest::default();
+
+        let mut ok_response = OkResponse::default();
+
+        ok_response.success = true;
 
         match self {
             Self::Ok(data) => {
-
-                let ok_response = OkResponse {
-                    data,
-                    success : true
-                };
+                ok_response.data = data;
 
                 (StatusCode::OK, Json(ok_response)).into_response()
-            },
-            Self::DatabaseError(error) => {
+            }
+            Self::CREATED(res) => {
+                ok_response.data = res;
+
+                (StatusCode::CREATED, Json(ok_response)).into_response()
+            }
+            Self::DatabaseError(error, scope) => {
+                response.scope = scope;
                 response.details = error.to_string();
-                response.error_code =   DB_ERROR_CODE.to_string();
+                response.error_code = DB_ERROR_CODE.to_string();
                 (StatusCode::INTERNAL_SERVER_ERROR, Json(response)).into_response()
-            },
-                Self::BadRequest(message) => {
+            }
+            Self::BadRequest(message) => {
                 response.details = message;
                 response.error_code = BAD_REQUEST.to_string();
-
 
                 (StatusCode::BAD_REQUEST, Json(response)).into_response()
             }
         }
     }
 }
-
 
 pub async fn save_file(new_file: NewFile<'_>) -> Result<NewFile<'_>, std::io::Error> {
     if !Path::new(&new_file.file_path.parent().unwrap()).exists() {
@@ -108,8 +117,6 @@ pub async fn compress_file(
     file_to_compress: NewFile<'_>,
     directory: PathBuf,
 ) -> Result<(), Box<dyn Error>> {
-
-
     if !Path::new(&directory).exists() {
         fs::create_dir_all(&directory).unwrap();
     }
@@ -122,8 +129,7 @@ pub async fn compress_file(
     Ok(())
 }
 
-pub fn verify_images(content_type : &str) -> bool {
-
+pub fn verify_images(content_type: &str) -> bool {
     let regex_validate_images = regex::Regex::new(r"jpg|jpeg|png").unwrap();
     regex_validate_images.is_match(content_type)
 }

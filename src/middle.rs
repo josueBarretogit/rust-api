@@ -1,5 +1,10 @@
 use axum::{
-    async_trait, extract::{FromRequest, FromRequestParts, Multipart, Request}, http::{header, request::Parts, HeaderMap, HeaderName, HeaderValue, StatusCode}, middleware::Next, response::IntoResponse, BoxError, Json, RequestExt
+    async_trait,
+    extract::{FromRequest, FromRequestParts, Multipart, Request},
+    http::{header, request::Parts, HeaderMap, HeaderName, HeaderValue, StatusCode},
+    middleware::Next,
+    response::IntoResponse,
+    BoxError, Json, RequestExt,
 };
 
 use regex::*;
@@ -20,7 +25,6 @@ pub async fn authorize(
     }
 }
 
-
 pub struct ExtractJwt(pub HeaderValue);
 
 #[async_trait]
@@ -31,8 +35,6 @@ where
     type Rejection = (StatusCode, &'static str);
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-
-
         if let Some(jwt) = parts.headers.get("jwt") {
             return Ok(ExtractJwt(jwt.clone()));
         }
@@ -43,6 +45,6 @@ where
     }
 }
 
-pub fn ok_response(statuscode:  StatusCode, message :  Json<Value>) -> (StatusCode, Json<Value>) {
+pub fn ok_response(statuscode: StatusCode, message: Json<Value>) -> (StatusCode, Json<Value>) {
     (StatusCode::OK, Json(json!({"response" : "ok"})))
 }

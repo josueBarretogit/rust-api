@@ -1,30 +1,25 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug, Default)]
 pub struct Books {
+    pub id: i64,
     pub description: Option<String>,
     pub title: Option<String>,
 }
 
-impl Books {
-    pub fn new(description: Option<String>, title: Option<String>) -> Self {
-        Books { description, title }
-    }
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug, Default)]
+pub struct BooksCreateDTO {
+    pub description: Option<String>,
+    pub title: Option<String>,
 }
 
-
-#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug, Default)]
 pub struct Roles {
-    pub id : i64,
+    pub id: i64,
+    pub rolename: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug, Default)]
+pub struct RolesCreateDTO {
     pub rolename: String,
 }
-
-
-
-impl Roles {
-    pub fn new(rolename: String ) -> Self {
-        Roles { id: 1, rolename }
-    }
-}
-
-

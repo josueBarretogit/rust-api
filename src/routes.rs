@@ -3,7 +3,7 @@ use axum::Router;
 use crate::{
     models::book_models::{Books, Roles},
     repositories::{customer_repository::CustomerRepository, Repository},
-    BooksCreateDTO, BooksRepository, RolesCreateDTO,
+    BooksCreateDTO, BooksRepository, BooksUpdateDto, RolesCreateDTO, RolesUpdateDTO,
 };
 
 pub mod book_routes;
@@ -14,12 +14,12 @@ pub trait CommonRoutes {
 }
 
 #[derive(Clone, Debug)]
-pub struct AppStateBooks<T: Repository<Books, BooksCreateDTO>> {
+pub struct AppStateBooks<T: Repository<Books, BooksCreateDTO, BooksUpdateDto>> {
     pub repository: T,
 }
 
 #[derive(Clone, Debug)]
-pub struct AppStateRoles<T: Repository<Roles, RolesCreateDTO>> {
+pub struct AppStateRoles<T: Repository<Roles, RolesCreateDTO, RolesUpdateDTO>> {
     pub repository: T,
 }
 

@@ -1,4 +1,6 @@
-use crate::{controllers::*, AppStateRoles, BooksCreateDTO, RolesRepository};
+use crate::{
+    controllers::*, AppStateRoles, BooksCreateDTO, BooksUpdateDto, RolesRepository, RolesUpdateDTO,
+};
 use axum::{
     debug_handler, extract::State, http::StatusCode, response::IntoResponse, Extension, Json,
 };
@@ -10,7 +12,9 @@ use crate::{models::book_models::Books, repositories::Repository, AppStateBooks,
 
 pub struct BookController {}
 
-impl super::Controller<Books, AppStateBooks<BooksRepository>, BooksCreateDTO> for BookController {
+impl super::Controller<Books, AppStateBooks<BooksRepository>, BooksCreateDTO, BooksUpdateDto>
+    for BookController
+{
     async fn handle_get_models(
         state: StateController<AppStateBooks<BooksRepository>>,
     ) -> ApiResponse {
@@ -32,11 +36,28 @@ impl super::Controller<Books, AppStateBooks<BooksRepository>, BooksCreateDTO> fo
         let response: Responder = Responder::Ok(json!(book));
         Ok::<Responder, Responder>(response)
     }
+
+    async fn handle_update_model(
+        state: StateController<AppStateBooks<BooksRepository>>,
+        id: Path<i64>,
+        body: Json<BooksUpdateDto>,
+    ) -> ApiResponse {
+        todo!()
+    }
+
+    async fn handle_delete_model(
+        state: StateController<AppStateBooks<BooksRepository>>,
+        id: Path<i64>,
+    ) -> ApiResponse {
+        todo!()
+    }
 }
 
 pub struct RolesController {}
 
-impl Controller<Roles, AppStateRoles<RolesRepository>, RolesCreateDTO> for RolesController {
+impl Controller<Roles, AppStateRoles<RolesRepository>, RolesCreateDTO, RolesUpdateDTO>
+    for RolesController
+{
     async fn handle_get_models(
         state: StateController<AppStateRoles<RolesRepository>>,
     ) -> ApiResponse {
@@ -53,6 +74,26 @@ impl Controller<Roles, AppStateRoles<RolesRepository>, RolesCreateDTO> for Roles
 
         match response {
             Ok(res) => Ok(Responder::Ok(json!(res))),
+            Err(db_error) => Err(Responder::DatabaseError(db_error, "roles".into())),
+        }
+    }
+
+    async fn handle_update_model(
+        state: StateController<AppStateRoles<RolesRepository>>,
+        id: Path<i64>,
+        body: Json<RolesUpdateDTO>,
+    ) -> ApiResponse {
+        todo!()
+    }
+
+    async fn handle_delete_model(
+        state: StateController<AppStateRoles<RolesRepository>>,
+        id: Path<i64>,
+    ) -> ApiResponse {
+        let database_reponse = state.repository.delete(*id).await;
+
+        match database_reponse {
+            Ok(deleted_role) => Ok(Responder::Ok(json!(deleted_role))),
             Err(db_error) => Err(Responder::DatabaseError(db_error, "roles".into())),
         }
     }
